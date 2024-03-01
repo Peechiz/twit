@@ -6,6 +6,10 @@ import { api } from "@/utils/api";
 export default function Home() {
   // const hello = api.post.hello.useQuery({ text: "from tRPC" });
 
+  const { data } = api.post.getAll.useQuery();
+
+  console.log(data); // Hello from tRPC
+
   // const { isSignedIn } = useUser();
 
   return (
@@ -26,7 +30,8 @@ export default function Home() {
         </SignedOut>
       </header>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-        <h1>hello twit</h1>
+        <h1 className="text-stone-200">hello twit</h1>
+        {data?.map((post) => <div key={post.id}>{post.content}</div>)}
       </main>
     </>
   );
