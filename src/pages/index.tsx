@@ -13,13 +13,12 @@ import type { RouterOutputs } from "@/utils/api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Image from "next/image";
+import { LoadingPage } from "@/components/spinner";
 
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
   const user = useUser();
-
-  console.log(user);
 
   if (!user) return null;
 
@@ -50,24 +49,31 @@ const PostView = ({ post, author }: PostWithAuthor) => {
           <span>{`@${author.username}`}</span>
           <span className="font-thin">{` · ${dayjs(post.createdAt).fromNow()}`}</span>
         </div>
-        <span>{post.content}</span>
+        <span className="text-2xl">{post.content}</span>
       </div>
     </div>
   );
 };
 
-export default function Home() {
-  // const hello = api.post.hello.useQuery({ text: "from tRPC" });
+const Feed = () => {
+  const { data, isLoading: postsLoading } = api.post.getAll.useQuery();
 
-  const { data, isLoading } = api.post.getAll.useQuery();
-
-  if (isLoading) return <div>Loading...</div>;
-
+  if (postsLoading) return <LoadingPage />;
   if (!data) return <div>Something went wrong...</div>;
 
-  console.log(data); // Hello from tRPC
+  return (
+    <div className="flex flex-col">
+      {data?.map((fullPost) => (
+        <PostView key={fullPost.post.id} {...fullPost} />
+      ))}
+    </div>
+  );
+};
 
-  // const { isSignedIn } = useUser();
+export default function Home() {
+  const { data, isLoading } = api.post.getAll.useQuery();
+
+  if (isLoading) return <LoadingPage />;
 
   return (
     <>
@@ -97,12 +103,9 @@ export default function Home() {
               {/* Signed out users get sign in button */}
               <SignInButton />
             </SignedOut>
-            <CreatePostWizard />
+            {!!data && <CreatePostWizard />}
           </header>
-
-          {data?.map((fullPost) => (
-            <PostView key={fullPost.post.id} {...fullPost} />
-          ))}
+          <Feed />
         </div>
       </main>
     </>
