@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Head from "next/head";
 import {
   UserButton,
@@ -18,17 +19,29 @@ import { LoadingPage } from "@/components/spinner";
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
+  const [input, setInput] = useState("");
   const user = useUser();
-
   if (!user) return null;
+
+  const { post } = api.useUtils();
+  const { mutate, isLoading: isPosting } = api.post.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+      void post.getAll.invalidate();
+    },
+  });
 
   return (
     <>
       <input
         type="text"
         placeholder="type some emoji!"
-        className="grow bg-transparent outline-none"
+        className="grow bg-transparent text-3xl outline-none"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        disabled={isPosting}
       />
+      <button onClick={() => mutate({ content: input })}>Post</button>
     </>
   );
 };
@@ -63,7 +76,7 @@ const Feed = () => {
 
   return (
     <div className="flex flex-col">
-      {data?.map((fullPost) => (
+      {data.map((fullPost) => (
         <PostView key={fullPost.post.id} {...fullPost} />
       ))}
     </div>
