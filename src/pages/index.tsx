@@ -14,7 +14,8 @@ import type { RouterOutputs } from "@/utils/api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Image from "next/image";
-import { LoadingPage } from "@/components/spinner";
+import { LoadingPage, Spinner } from "@/components/spinner";
+import toast from "react-hot-toast";
 
 dayjs.extend(relativeTime);
 
@@ -29,19 +30,48 @@ const CreatePostWizard = () => {
       setInput("");
       void post.getAll.invalidate();
     },
+    onError: (e) => {
+      const errorMsg = e.data?.zodError?.fieldErrors.content;
+      if (!!errorMsg?.[0]) {
+        toast.error(errorMsg[0]);
+      } else {
+        toast.error("Something went wrong");
+      }
+    },
   });
 
   return (
     <>
+      <div className="flex flex-row items-center text-3xl">📝</div>
       <input
         type="text"
         placeholder="type some emoji!"
-        className="grow bg-transparent text-3xl outline-none"
+        className="grow bg-gray-900 p-2 text-3xl outline-none"
         value={input}
         onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (input !== "") {
+              mutate({ content: input });
+            }
+          }
+        }}
         disabled={isPosting}
       />
-      <button onClick={() => mutate({ content: input })}>Post</button>
+      {isPosting && (
+        <div className="flex items-center justify-center">
+          <Spinner size={40} />
+        </div>
+      )}
+      {input !== "" && !isPosting && (
+        <button
+          className="rounded-md bg-cyan-800 p-2 text-3xl hover:bg-cyan-700"
+          onClick={() => mutate({ content: input })}
+        >
+          📄
+        </button>
+      )}
     </>
   );
 };
